@@ -1,0 +1,19 @@
+import statistics
+from lib.helpers import *
+
+
+
+{"a": [1], "b": [2]} |> add$(?,("a", 7)) |> add$(?, ("c", 88)) |> print
+[1,2,3,4] |> group_by$(x => x<2) |> print
+
+# ([8,7,4,3,2,1] |> 
+# arr => map(x => x - statistics.median(arr), arr) |> 
+# group_by$(x => x `eqi` 0) |>
+# print
+# )
+
+
+
+# l = S |> arr => filter(x => x < statistics.median(arr), arr) |> list |> list.sort
+# r = S |> arr => filter(x => x >= statistics.median(arr), arr) |> list |> list.sort
+

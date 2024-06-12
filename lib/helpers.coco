@@ -1,0 +1,37 @@
+import statistics
+import math
+
+def middle(r) = (min(r) + max(r))/2 |> math.floor
+
+case def add:
+    case(d, (k,v) if k in d) = d | {k: [*d[k], v]}
+    case(d, (k,v)) = d | {k:[v]}
+
+def group_by(f, l):
+    return l |> reduce$((d, item) => add(d, (f(item), item)), ?, {})
+
+
+case def eqi:
+    case(x,y if x < y) = -1
+    case(x,y if x  == y) = 0
+    case(x,y if x > y) = 1
+
+
+def special_h(i, j, k) =  k `eqi` i + j + 1 
+
+
+case def h:
+    case((i,xval),(j, yval),k if xval == yval == 0) = special_h(i, j, k)
+    case((_,xval),(_, yval), _) = (yval + xval)/(yval-xval)
+
+
+# TODO: OPTIMIZE
+def weighted_med(tuples) = tuples |> map$(tup => [tup.value] * tup.weight) |> flatten |> statistics.median
+
+def median_overflow(med, row):
+    return row |> enumerate |> filter$(tup => tup[1] < med) |> x => next(x, [len(row)]) |> x => x[0]
+
+def take(arr, range):
+    return (value = arr[middle(range)], weight = len(range))
+
+
