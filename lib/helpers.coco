@@ -1,5 +1,6 @@
 import statistics
 import math
+import itertools
 
 def middle(r) = (min(r) + max(r))/2 |> math.floor
 
@@ -13,7 +14,7 @@ def group_by(f, l):
 
 case def eqi:
     case(x,y if x < y) = -1
-    case(x,y if x  == y) = 0
+    case(x,y if x == y) = 0
     case(x,y if x > y) = 1
 
 
@@ -25,13 +26,67 @@ case def h:
     case((_,xval),(_, yval), _) = (yval + xval)/(yval-xval)
 
 
-# TODO: OPTIMIZE
 def weighted_med(tuples) = tuples |> map$(tup => [tup.value] * tup.weight) |> flatten |> statistics.median
 
-def median_overflow(med, row):
+# TODO: OPTIMIZE
+def median_overflow(med, row, range = range(0,0)):
     return row |> enumerate |> filter$(tup => tup[1] < med) |> x => next(x, [len(row)]) |> x => x[0]
 
 def take(arr, range):
+    print("gonna do middle")
+    print(f"range is {range}, arr is {arr}")
+    # TODO: RANGE IS 0,0 !!! 
+    print(f"middle is  {middle(range)} {arr[middle(range)]} {arr}")
     return (value = arr[middle(range)], weight = len(range))
 
 
+case def row_overflow:
+    case(rows, ranges, med) = row_overflow(rows, ranges, med, [])
+    case([row] + rows, [range] + ranges, med, med_over) = row_overflow(rows, ranges, med, med_over + [median_overflow(med, row, range)])
+    case(_,_,_,med_over) = med_over
+
+
+# [1,2,3]
+# (3,3)
+def sum_if_dims(indexes, matrix_dim) = sum(indexes) > (matrix_dim[0] * matrix_dim[1])/2
+
+#(0,3|0,3|0,3|0,3), False, [2,2,1,0] -> (2,3|2,3|1,3|0,3)
+def alter_ranges(ranges, b, indexes) = (ranges,indexes) |*> map$((r,i) => if b then range(min(r),i) else range(i,max(r)+1)) |> list
+
+
+def dims(matrix) = (len(matrix), len(matrix[0]))
+
+
+def xxx(matrix, ranges):
+    indexes = (matrix, ranges) |*> map$(take) |> weighted_med |> row_overflow$(matrix, ranges, ?)
+    print(f"dim vs ranges range {dims(matrix), len(ranges)}")
+    should_alter = sum_if_dims(indexes, dims(matrix))
+    return (matrix, alter_ranges(ranges, should_alter, indexes))
+
+
+def each_one(arr) = arr |> map$(x => len(x) == 1) |> all
+
+case def until_death:
+    case(matrix, ranges if ranges |> each_one) = (matrix,ranges)
+    case(matrix, ranges) = (matrix,ranges) |*> xxx |*> until_death
+
+
+def sum_if_dims2(ranges, matrix_dim):
+    x = ranges |> map$(min) |> sum
+    should_before = matrix_dim |*> (*) |> (.%2) == 0
+    res =  matrix_dim |*> (*) |> (.//2) |> (.-x)
+    return if should_before then slice(res-1,res+1) else slice(res-1,res)
+
+
+
+def medcouple(matrix, ranges):
+    m,rs = until_death(matrix, ranges)
+    print(f"ranges after until death: {rs}")
+    res = (m,rs) |*> map$((row, r) => row[min(r)]) |> sorted..>reversed..>list
+    return res[sum_if_dims2(rs,dims(m))]  |> statistics.mean
+
+
+def prepare(data):
+    mean = data |> statistics.median
+    (zm,zp) = data |> map$(x => x-mean) |> group_by$( x => x `eqi` 0) |> x => (x[0] + x[-1], x[1]+ x[0]) if 0 in x else (x[-1],x[1])
+    return  ([[h(m,p,len(zp)) for m in enumerate(zm)] for p in enumerate(zp)],itertools.repeat(range(0,len(zm)), len(zp)) |> list) |*> medcouple
