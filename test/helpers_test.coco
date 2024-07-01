@@ -25,27 +25,16 @@ class TestStringMethods(unittest.TestCase):
         ((value = 1, weight = 3), (value = 1, weight = 3), (value = 0 , weight = 3), (value = -1 , weight = 3)) |> weighted_med |> self.assertEqual$(0.5)
 
 
-    def test_median_overflow(self):
-        (2, [3,2,1]) |*> median_overflow |> self.assertEqual$(2)
-        (0.5, [3,2,1]) |*> median_overflow |> self.assertEqual$(3)
-        (0.5, [1,1,1/3]) |*> median_overflow |> self.assertEqual$(2)
-        (1/6, [1,1,1/3]) |*> median_overflow |> self.assertEqual$(3)
-        (1, [1,1,1/3]) |*> median_overflow |> self.assertEqual$(2) # <
-        (1/2, [0,-1,-1]) |*> median_overflow |> self.assertEqual$(0) # <
-
-
     def test_take(self):
         ([1,1,1/3], range(0,3)) |*> take |> self.assertEqual$((value = 1, weight = 3))
         ([1,0,-1], range(1,3)) |*> take |> self.assertEqual$((value = 0, weight = 2))
+        ([1,0,-1], range(3,3)) |*> take |> self.assertEqual$((value=None, weight=0))
+        ([1,0,-1], range(0,0)) |*> take |> self.assertEqual$((value=None, weight=0))
 
     
     def test_matrix_median(self):
         ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> map$(take) |> list |> weighted_med |> self.assertEqual$(0.5)
         ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,3), range(1,3), range(0,3)]) |*> map$(take) |> list |> weighted_med |> self.assertEqual$(0)
-
-
-    def test_row_overflow(self):
-        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)], 1/2) |*> row_overflow |> self.assertEqual$([2,2,1,0]) 
 
     
     def test_sum_if_dims(self):
@@ -57,29 +46,80 @@ class TestStringMethods(unittest.TestCase):
         ([range(0,3), range(0,3), range(0,3), range(0,3)], False, [2,2,1,0]) |*> alter_ranges |> self.assertEqual$([range(2,3), range(2,3), range(1,3), range(0,3)]) 
         ([range(0,3), range(0,3), range(0,3), range(0,3)], True, [2,2,1,0]) |*> alter_ranges |> self.assertEqual$([range(0,2), range(0,2), range(0,1), range(0,0)]) 
 
+
+    def test_median_overflow2(self):
+        (3, [6,5,4,3,2,1]) |*> median_overflow2 |> self.assertEqual$((4,3))
+        # Hans
+        (0.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((8,8))
+        (1, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((8,7))
+        (1.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((7,7))
+        (2, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((7,6))
+        (2.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((6,6))
+        (3, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((6,3))
+        (3.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((3,3))
+        (4, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((3,2))
+        (4.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((2,2))
+        (5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((2,1))
+        (5.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((1,1))
+        (6, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((1,0))
+        (6.5, [6,5,4,3,3,3,2,1]) |*> median_overflow2 |> self.assertEqual$((0,0))
+
+    def test_row_overflow(self):
+        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)], 1/2) |*> row_overflow |> self.assertEqual$([(2, 2), (2, 2), (1, 1), (0, 0)]) 
+
+
+    def test_indexes_to_alter(self):
+        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> indexes_to_alter |> self.assertEqual$([(2, 2), (2, 2), (1, 1), (0, 0)]) 
+        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,3), range(1,3), range(0,3)]) |*> indexes_to_alter |> self.assertEqual$([(3, 3), (3, 2), (2, 1), (1, 0)]) 
+
+
+
     def test_xxx(self):
-        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> xxx |> self.assertEqual$(([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1],[range(2,3), range(2,3), range(1,3), range(0,3)])) 
-        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> xxx |*> xxx |> self.assertEqual$(([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1],[range(2,3), range(2,3), range(1,2), range(0,1)])) 
-        fivex = xxx ..*> xxx ..*> xxx ..*> xxx ..*> xxx 
-        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> fivex |> self.assertEqual$(([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1],[range(2,3), range(2,3), range(1,2), range(0,1)])) 
+        (6,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> xxx |> self.assertEqual$([range(2, 3), range(2, 3), range(1, 3), range(0, 3)]) 
+        (6,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,3), range(1,3), range(0,3)]) |*> xxx |> self.assertEqual$([range(2, 3), range(2, 2), range(1, 1), range(0, 0)]) 
+        (6, [1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,2), range(1,1), range(0,0)]) |*> xxx |> self.assertEqual$((True,1/3))
+        (7,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> xxx |> self.assertEqual$([range(2, 3), range(2, 3), range(1, 3), range(0, 3)]) 
+        (7,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,3), range(1,3), range(0,3)]) |*> xxx |> self.assertEqual$((True, 0))
+        (10,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> xxx |> self.assertEqual$([range(2, 3), range(2, 3), range(1, 3), range(0, 3)]) 
+        (10,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(2,3), range(2,3), range(1,3), range(0,3)]) |*> xxx |> self.assertEqual$([range(3, 3), range(3, 3), range(2, 3), range(1, 3)]) 
+        (10,[1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(3, 3), range(3, 3), range(2, 3), range(1, 3)]) |*> xxx |> self.assertEqual$((True,-1)) 
+    
 
     def test_until_death(self):
-        ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> until_death |> self.assertEqual$(([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1],[range(2,3), range(2,3), range(1,2), range(0,1)])) 
+        (1,2,(True, 50)) |*> until_death |> self.assertEqual$(50)
+        (6, [1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> until_death |> self.assertEqual$(1/3)
+        #([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)],6) |*> until_death |> self.assertEqual$(1/3) 
 
     def test_medcouple(self):
         ([1,1,1/3;;1,1,0;;1,0,-1;;0,-1,-1], [range(0,3), range(0,3), range(0,3), range(0,3)]) |*> medcouple |> self.assertEqual$(1/6) 
 
-    
-    def test_middle_range(self):
-        range(0,3) |> middle |> self.assertEqual$(1)
-        range(0,0) |> middle |> self.assertEqual$(0)
 
-    def test_prepare(self):
+    # def test_each_one(self):
+    #     [range(4, 5), range(4, 5), range(1, 2), range(0, 1)] |> each_one |> self.assertEqual$(True)
+    #     [range(4, 10), range(4, 5), range(1, 2), range(0, 1)] |> each_one |> self.assertEqual$(False)
+    #     [range(2, 2), range(4, 5), range(1, 2), range(0, 1)] |> filter$(len) |> each_one |> self.assertEqual$(True)
+    #     [range(2, 2), range(4, 5), range(2, 2), range(0, 1)] |> filter$(len) |> each_one |> self.assertEqual$(True)
+    #     [] |> each_one |> self.assertEqual$(True)
+    
+    # def test_middle_range(self):
+    #     range(0,3) |> middle |> self.assertEqual$(1)
+    #     range(0,0) |> middle |> self.assertEqual$(None)
+    #     range(3,3) |> middle |> self.assertEqual$(None)
+    #     range(0,1) |> middle |> self.assertEqual$(0) # [0] == 0 ??
+
+    # def test_filter__matrix_ranges(self):
+    #     ([1,1,1;;2,2,2;;3,3,3], [range(0, 1), range(1, 1), range(0, 5)]) |*> rmfilter |> self.assertEqual$(([[1, 1, 1], [3, 3, 3]], [range(0,1), range(0,5)]))
+    #     ([10,50,1], [range(0, 1), range(1, 1), range(0, 5)]) |*> rmfilter |> self.assertEqual$(([10,1],[range(0,1), range(0,5)]))
+    #     ([10,50,1], [range(0, 1), range(10, 10), range(0, 5)]) |*> rmfilter |> self.assertEqual$(([10,1],[range(0,1), range(0,5)]))
+
+    
+    def test_prepare(self):  
         [1,2,2,3,4] |> reversed |> prepare |> self.assertEqual$(1/6) 
         [1,2,3,4,5] |> reversed |> prepare |> self.assertEqual$(0)
-        # TODO: range is 0,0 or 3,3 and fails
-        #[1,2,3,4] |> reversed |> prepare |> self.assertEqual$(0) 
+        [1,2,3,4] |> reversed |> prepare |> self.assertEqual$(0) 
         # [123,122,57,45,35,12,10,1, -1,-20] |> prepare |> self.assertEqual$(0.3030303)
-        # [123,122,57,45,35,12,10,1, -1] |> prepare |> self.assertEqual$(0)
+        [123,122,57,45,35,12,10,1, -1] |> prepare |> self.assertEqual$(0)
+
+
 if __name__ == '__main__':
     unittest.main()

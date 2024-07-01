@@ -7,5 +7,5 @@
     $ pip install -r requirements.txt
     $ source venv/bin/activate
     $ coconut-run test/helpers_test.coco
-    $(env/bin/coconut-run) test/helpers_test.coco
+    $(venv/bin/coconut-run) test/helpers_test.coco
 ```
