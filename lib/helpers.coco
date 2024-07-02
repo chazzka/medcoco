@@ -60,7 +60,7 @@ def sum_if_dims(indexes, matrix_dim) = sum(indexes) > (matrix_dim[0] * matrix_di
 
 #(0,3|0,3|0,3|0,3), False, [2,2,1,0] -> (2,3|2,3|1,3|0,3)
 def alter_ranges(ranges, b, indexes):
-    return (ranges,indexes) |*> map$((r,i) => if b then range(min(r),i) else range(i,max(r)+1)) |> list
+    return (ranges,indexes) |*> map$((r,i) => if len(r) then (if b then range(min(r),i) else range(i,max(r)+1)) else r) |> list
     
 
 
@@ -84,7 +84,10 @@ case def alteration:
 def xxx(k, matrix, ranges):
     indexes = indexes_to_alter(matrix,ranges)
     leftsum, rightsum = indexes |> reduce$((x,y)=>(x[0]+y[0], x[1]+y[1]))
-    return alteration(k, leftsum, rightsum, matrix, ranges, indexes)
+    # print(f"ranges before alteration {k} {indexes} {ranges} {leftsum} {rightsum}")
+    res = alteration(k, leftsum, rightsum, matrix, ranges, indexes)
+    # print(f"ranges after alteration {res}")
+    return res
 
     # match k,leftsum,rightsum:
     #     case (k,_, rightsum if k <= rightsum):
@@ -106,13 +109,14 @@ case def until_death:
 def sum_if_dims2(ranges, matrix_dim):
     x = ranges |> map$(min) |> sum
     should_before = matrix_dim |*> (*) |> (.%2) == 0
-    res =  matrix_dim |*> (*) |> (.//2) |> (.-x)
+    res =  matrix_dim |*> (*) |> (./2) |> math.ceil |> (.-x)
     return (should_before, res)
     # return if should_before then slice(res-1,res+1) else slice(res-1,res)
 
 
 
 def medcouple(matrix, ranges):
+    print(matrix |> flatten |> sorted |> list)
     match sum_if_dims2(ranges, dims(matrix)):
         case (False, res):
             return until_death(res, matrix, ranges)
