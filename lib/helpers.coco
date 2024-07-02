@@ -1,6 +1,7 @@
 import statistics
 import math
 import itertools
+import bisect
 
 def middle(r) = ((min(r) + max(r))/2 |> math.floor) if len(r) > 0 else None
 
@@ -26,19 +27,44 @@ case def h:
     case((_,xval),(_, yval), _) = (yval + xval)/(yval-xval)
 
 
-# TODO: OPTIMIZE
-def weighted_med(tuples):
-    x = tuples |> map$(tup => [tup.value] * tup.weight) |> flatten
-    return x |> statistics.median
+def weighted_med(combined):    
+    # Sort the combined list by values
+    combined = combined |> filter$(x=> x.value != None) |> list
+    combined.sort(key=lambda x: x.value)
+    
+    # Separate the sorted values and weights
+    sorted_values = [x.value for x in combined if x.value != None]
+    sorted_weights = [x.weight for x in combined if x.value != None]
+    
+    # Compute the cumulative sum of the weights
+    cumulative_weights = [sum(sorted_weights[:i+1]) for i in range(len(sorted_weights))]
+    
+    # Find the position where the cumulative sum exceeds half of the total weight
+    total_weight = sum(sorted_weights)
+    median_index = next(i for i, total in enumerate(cumulative_weights) if total >= total_weight / 2)
+    
+    # The weighted median is the value at this position
+    return sorted_values[median_index]
 
-# TODO: OPTIMIZE
+# def weighted_med(tuples):
+#     x = tuples |> map$(tup => [tup.value] * tup.weight) |> flatten
+#     return x |> statistics.median
+
+
 # def median_overflow(wmed, row, range = range(0,0)):
 #     return row |> enumerate |> filter$(tup => tup[1] <= wmed) |> x => next(x, [len(row)]) |> x => x[0]
 
-def median_overflow2(wmed, row, range = range(0,0)):
-    left = row |> enumerate |> filter$(tup => tup[1] < wmed) |> x => next(x, [len(row)]) |> x => x[0]
-    right = row |> enumerate |> reversed |> filter$(tup => tup[1] > wmed) |> x => next(x, [-1]) |> x => x[0]
-    return (left,right+1)
+# def median_overflow2(wmed, row, range = range(0,0)):
+#     left = row |> enumerate |> filter$(tup => tup[1] < wmed) |> x => next(x, [len(row)]) |> x => x[0]
+#     right = row |> enumerate |> reversed |> filter$(tup => tup[1] > wmed) |> x => next(x, [-1]) |> x => x[0]
+#     return (left,right+1)
+
+
+def median_overflow2(wmed, row, r=range(0,0)):
+    left = bisect.bisect_right(row,-wmed,key=x=>-x, lo=(if len(r) then min(r) else 0), hi=(if len(r) then max(r)+1 else None))
+    right = bisect.bisect_left(row,-wmed,key=x=>-x, lo=(if len(r) then min(r) else 0), hi=(if len(r) then max(r)+1 else None))
+
+    return (left, right)
 
 def take(arr, range):
     match middle(range):
@@ -111,7 +137,6 @@ def sum_if_dims2(ranges, matrix_dim):
     should_before = matrix_dim |*> (*) |> (.%2) == 0
     res =  matrix_dim |*> (*) |> (./2) |> math.ceil |> (.-x)
     return (should_before, res)
-    # return if should_before then slice(res-1,res+1) else slice(res-1,res)
 
 
 
