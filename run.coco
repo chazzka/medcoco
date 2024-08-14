@@ -1,0 +1,10 @@
+import toolz
+from lib.helpers import prepare
+import numpy as np
+from statsmodels.stats.stattools import medcouple
+
+# data |> toolz.partition$(3) |> list |> print
+
+np.random.rand(3000) |> np.sort |> prepare |> print
+
+# data |> toolz.partition$(3) |> map$(x =>(x[0])) |> list |> sorted |> np.array |> medcouple |> print

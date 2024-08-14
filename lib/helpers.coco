@@ -27,7 +27,8 @@ case def h:
     case((_,xval),(_, yval), _) = (yval + xval)/(yval-xval)
 
 
-def weighted_med(combined):    
+def weighted_med(combined):
+    print("start weighted_med")
     # Sort the combined list by values
     combined = combined |> filter$(x=> x.value != None) |> list
     combined.sort(key=lambda x: x.value)
@@ -61,6 +62,7 @@ def weighted_med(combined):
 
 
 def median_overflow2(wmed, row, r=range(0,0)):
+    print("start median_overflow2")
     left = bisect.bisect_right(row,-wmed,key=x=>-x, lo=(if len(r) then min(r) else 0), hi=(if len(r) then max(r)+1 else None))
     right = bisect.bisect_left(row,-wmed,key=x=>-x, lo=(if len(r) then min(r) else 0), hi=(if len(r) then max(r)+1 else None))
 
@@ -86,6 +88,7 @@ def sum_if_dims(indexes, matrix_dim) = sum(indexes) > (matrix_dim[0] * matrix_di
 
 #(0,3|0,3|0,3|0,3), False, [2,2,1,0] -> (2,3|2,3|1,3|0,3)
 def alter_ranges(ranges, b, indexes):
+    print("start alter ranges")
     return (ranges,indexes) |*> map$((r,i) => if len(r) then (if b then range(min(r),i) else range(i,max(r)+1)) else r) |> list
     
 
@@ -108,6 +111,7 @@ case def alteration:
     case (_,_,_, matrix, ranges, _) = (matrix, ranges) |*> map$(take) |> weighted_med |> (True, .)
 
 def xxx(k, matrix, ranges):
+    print("start xxx")
     indexes = indexes_to_alter(matrix,ranges)
     leftsum, rightsum = indexes |> reduce$((x,y)=>(x[0]+y[0], x[1]+y[1]))
     # print(f"ranges before alteration {k} {indexes} {ranges} {leftsum} {rightsum}")
@@ -141,7 +145,7 @@ def sum_if_dims2(ranges, matrix_dim):
 
 
 def medcouple(matrix, ranges):
-    print(matrix |> flatten |> sorted |> list)
+    print("medcouple")
     match sum_if_dims2(ranges, dims(matrix)):
         case (False, res):
             return until_death(res, matrix, ranges)
@@ -154,6 +158,7 @@ def medcouple(matrix, ranges):
 
 
 def prepare(data):
+    print("start prepare")
     mean = data |> statistics.median
     (zm,zp) = data |> map$(x => x-mean) |> group_by$( x => x `eqi` 0) |> x => (x[0] + x[-1], x[1]+ x[0]) if 0 in x else (x[-1],x[1])
     return  ([[h(m,p,len(zp)) for m in enumerate(zm)] for p in enumerate(zp)],itertools.repeat(range(0,len(zm)), len(zp)) |> list) |*> medcouple
